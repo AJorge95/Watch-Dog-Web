@@ -1,0 +1,247 @@
+=== db1-server (Master) ===
+
+sudo apt update
+sudo apt upgrade -y
+
+sudo apt install mysql-server -y
+
+sudo mysql_secure_installation
+
+sudo nano /etc/mysql/mysql.conf.d/mysqld.cnf
+
+bind-address = 0.0.0.0
+server-id = 1
+log_bin = /var/log/mysql/mysql-bin.log
+
+sudo service mysql restart
+
+sudo mysql -u root -p
+
+CREATE USER '<username>'@'%' IDENTIFIED BY '<password>';
+GRANT REPLICATION SLAVE ON *.* TO '<username>'@'%';
+
+GRANT ALL PRIVILEGES ON *.* TO '<username>'@'%' WITH GRANT OPTION;
+
+GRANT CREATE, DROP, ALTER, SHOW DATABASES, SELECT, INSERT, UPDATE, DELETE ON *.* TO '<username>'@'%';
+
+FLUSH PRIVILEGES;
+
+SHOW MASTER STATUS;
+
+		+------------------+----------+--------------+------------------+-------------------+
+		| File             | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
+		+------------------+----------+--------------+------------------+-------------------+
+		| mysql-bin.000001 |      864 |              |                  |                   |
+		+------------------+----------+--------------+------------------+-------------------+
+
+
+EXIT;
+
+=== db2-server (Slave) ===
+
+sudo apt update
+sudo apt upgrade -y
+
+sudo apt install mysql-server -y
+
+sudo mysql_secure_installation
+
+sudo nano /etc/mysql/mysql.conf.d/mysqld.cnf
+
+bind-address = 0.0.0.0
+server-id = 2
+relay-log = /var/log/mysql/mysql-relay-bin.log
+log_bin = /var/log/mysql/mysql-bin.log
+
+sudo service mysql restart
+
+sudo mysql -u root -p
+
+CREATE USER '<username>'@'%' IDENTIFIED BY '<password>';
+
+GRANT ALL PRIVILEGES ON *.* TO '<username>'@'%' WITH GRANT OPTION;
+
+GRANT CREATE, DROP, ALTER, SHOW DATABASES, SELECT, INSERT, UPDATE, DELETE ON *.* TO '<username>'@'%';
+
+FLUSH PRIVILEGES;
+
+CHANGE MASTER TO
+MASTER_HOST = '<Master IP>',
+MASTER_USER = '<username>',
+MASTER_PASSWORD = '<password>',
+MASTER_LOG_FILE = 'mysql-bin.000001',
+MASTER_LOG_POS = 864;
+
+START SLAVE;
+
+SHOW SLAVE STATUS \G
+
+		*************************** 1. row ***************************
+					   Slave_IO_State: Connecting to source
+						  Master_Host: <Master IP>
+						  Master_User: <username>
+						  Master_Port: 3306
+						Connect_Retry: 60
+					  Master_Log_File: mysql-bin.000001
+				  Read_Master_Log_Pos: 864
+					   Relay_Log_File: mysql-relay-bin.000001
+						Relay_Log_Pos: 4
+				Relay_Master_Log_File: mysql-bin.000001
+					 Slave_IO_Running: Connecting
+					Slave_SQL_Running: Yes
+					  Replicate_Do_DB:
+				  Replicate_Ignore_DB:
+				   Replicate_Do_Table:
+			   Replicate_Ignore_Table:
+			  Replicate_Wild_Do_Table:
+		  Replicate_Wild_Ignore_Table:
+						   Last_Errno: 0
+						   Last_Error:
+						 Skip_Counter: 0
+				  Exec_Master_Log_Pos: 864
+					  Relay_Log_Space: 157
+					  Until_Condition: None
+					   Until_Log_File:
+						Until_Log_Pos: 0
+				   Master_SSL_Allowed: No
+				   Master_SSL_CA_File:
+				   Master_SSL_CA_Path:
+					  Master_SSL_Cert:
+					Master_SSL_Cipher:
+					   Master_SSL_Key:
+				Seconds_Behind_Master: NULL
+		Master_SSL_Verify_Server_Cert: No
+						Last_IO_Errno: 2061
+						Last_IO_Error: Error connecting to source '<username>@<Master IP>:3306'. This was attempt 1/86400, with a delay of 60 seconds between attempts. Message: Authentication plugin 'caching_sha2_password' reported error: Authentication requires secure connection.
+					   Last_SQL_Errno: 0
+					   Last_SQL_Error:
+		  Replicate_Ignore_Server_Ids:
+					 Master_Server_Id: 0
+						  Master_UUID:
+					 Master_Info_File: mysql.slave_master_info
+							SQL_Delay: 0
+				  SQL_Remaining_Delay: NULL
+			  Slave_SQL_Running_State: Replica has read all relay log; waiting for more updates
+				   Master_Retry_Count: 86400
+						  Master_Bind:
+			  Last_IO_Error_Timestamp: 230526 15:02:22
+			 Last_SQL_Error_Timestamp:
+					   Master_SSL_Crl:
+				   Master_SSL_Crlpath:
+				   Retrieved_Gtid_Set:
+					Executed_Gtid_Set:
+						Auto_Position: 0
+				 Replicate_Rewrite_DB:
+						 Channel_Name:
+				   Master_TLS_Version:
+			   Master_public_key_path:
+				Get_master_public_key: 0
+					Network_Namespace:
+		1 row in set, 1 warning (0.00 sec)
+
+EXIT;
+
+=== db3-server (Slave) ===
+
+sudo apt update
+sudo apt upgrade -y
+
+sudo apt install mysql-server -y
+
+sudo mysql_secure_installation
+
+sudo nano /etc/mysql/mysql.conf.d/mysqld.cnf
+
+bind-address = 0.0.0.0
+server-id = 3
+relay-log = /var/log/mysql/mysql-relay-bin.log
+log_bin = /var/log/mysql/mysql-bin.log
+
+sudo service mysql restart
+
+sudo mysql -u root -p
+
+CREATE USER '<username>'@'%' IDENTIFIED BY '<password>';
+
+GRANT ALL PRIVILEGES ON *.* TO '<username>'@'%' WITH GRANT OPTION;
+
+GRANT CREATE, DROP, ALTER, SHOW DATABASES, SELECT, INSERT, UPDATE, DELETE ON *.* TO '<username>'@'%';
+
+FLUSH PRIVILEGES;
+
+CHANGE MASTER TO
+MASTER_HOST = '<Master IP>',
+MASTER_USER = '<username>',
+MASTER_PASSWORD = '<password>',
+MASTER_LOG_FILE = 'mysql-bin.000001',
+MASTER_LOG_POS = 864;
+
+START SLAVE;
+
+SHOW SLAVE STATUS \G
+
+		*************************** 1. row ***************************
+					   Slave_IO_State: Waiting for source to send event
+						  Master_Host: <Master IP>
+						  Master_User: <username>
+						  Master_Port: 3306
+						Connect_Retry: 60
+					  Master_Log_File: mysql-bin.000002
+				  Read_Master_Log_Pos: 4608
+					   Relay_Log_File: mysql-relay-bin.000003
+						Relay_Log_Pos: 4824
+				Relay_Master_Log_File: mysql-bin.000002
+					 Slave_IO_Running: Yes
+					Slave_SQL_Running: Yes
+					  Replicate_Do_DB:
+				  Replicate_Ignore_DB:
+				   Replicate_Do_Table:
+			   Replicate_Ignore_Table:
+			  Replicate_Wild_Do_Table:
+		  Replicate_Wild_Ignore_Table:
+						   Last_Errno: 0
+						   Last_Error:
+						 Skip_Counter: 0
+				  Exec_Master_Log_Pos: 4608
+					  Relay_Log_Space: 5885
+					  Until_Condition: None
+					   Until_Log_File:
+						Until_Log_Pos: 0
+				   Master_SSL_Allowed: No
+				   Master_SSL_CA_File:
+				   Master_SSL_CA_Path:
+					  Master_SSL_Cert:
+					Master_SSL_Cipher:
+					   Master_SSL_Key:
+				Seconds_Behind_Master: 0
+		Master_SSL_Verify_Server_Cert: No
+						Last_IO_Errno: 0
+						Last_IO_Error:
+					   Last_SQL_Errno: 0
+					   Last_SQL_Error:
+		  Replicate_Ignore_Server_Ids:
+					 Master_Server_Id: 1
+						  Master_UUID: a0d7706f-fbd4-11ed-a4fc-66b635299f1b
+					 Master_Info_File: mysql.slave_master_info
+							SQL_Delay: 0
+				  SQL_Remaining_Delay: NULL
+			  Slave_SQL_Running_State: Replica has read all relay log; waiting for more updates
+				   Master_Retry_Count: 86400
+						  Master_Bind:
+			  Last_IO_Error_Timestamp:
+			 Last_SQL_Error_Timestamp:
+					   Master_SSL_Crl:
+				   Master_SSL_Crlpath:
+				   Retrieved_Gtid_Set:
+					Executed_Gtid_Set:
+						Auto_Position: 0
+				 Replicate_Rewrite_DB:
+						 Channel_Name:
+				   Master_TLS_Version:
+			   Master_public_key_path:
+				Get_master_public_key: 0
+					Network_Namespace:
+		1 row in set, 1 warning (0.00 sec)
+
+
+EXIT;
